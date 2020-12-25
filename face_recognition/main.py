@@ -10,6 +10,7 @@ all_files = 0
 avg_size = 0.0
 max_size = 0.0
 total_size = 0.0
+cpus = "0"
 
 processed_part: str = '_processed.'
 
@@ -20,11 +21,14 @@ def faces_coords(filepath: str):
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("you should provide folder with images as a first argument")
+        print("you should provide cpus fraction as a second argument")
         exit(1)
 
     photo_dir: str = sys.argv[1]
+    global cpus
+    cpus = sys.argv[2]
 
     if photo_dir == '' or not os.path.isdir(photo_dir):
         print('unknown dir "' + photo_dir + '"')
@@ -69,7 +73,7 @@ def main():
         if file_size > max_size:
             max_size = file_size
 
-        #TODO close figure
+        pyplot.close(fig=figure)
 
 
 if __name__ == "__main__":
@@ -79,3 +83,4 @@ if __name__ == "__main__":
     print("total_size: %s" % total_size)
     print("max_size: %s" % max_size)
     print("avg_size: %s" % str(total_size/float(all_files)))
+    print("cpus: %s" % cpus)
