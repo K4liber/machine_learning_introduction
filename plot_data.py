@@ -56,7 +56,7 @@ def main():
                            "epsilon": [0.001],
                            "C": [300],
                        })
-    # TODO what means this parameters above?
+    print(scaled_X_train)
     svr.fit(scaled_X_train, z_scaled)
     z_svr = svr.predict(scaled_X)
     z_svr_test = svr.predict(scaled_X_test)

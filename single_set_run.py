@@ -3,7 +3,7 @@ import sys
 
 
 def main():
-    cpus_set = {x/10 for x in range(10) if x != 0}
+    cpus_set = {x/2 for x in range(10) if x != 0}
 
     if len(sys.argv) < 2:
         print("you should provide folder with images as a first argument")

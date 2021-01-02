@@ -19,6 +19,6 @@ RUN apk --update add gcc libgcc musl-dev jpeg-dev zlib-dev
 COPY requirements.txt ./
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 # Do not change anything above
-COPY main.py main.py
+COPY main_parallel.py main.py
 
 ENTRYPOINT [ "python", "./main.py" ]
