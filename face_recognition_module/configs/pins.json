@@ -1,0 +1,17 @@
+[
+ {
+ "PinName": "Input",
+ "PinType": "input",
+ "AccessType": "ftp",
+ "AccessCredential": {
+      "connectionstring": "ftp://username:password@input_host:port"
+    }
+ },
+ {
+ "PinName": "Output",
+ "PinType": "output",
+ "AccessType": "ftp",
+ "AccessCredential": {
+      "connectionstring": "ftp://username:password@output_host:port"
+    }
+ }]
