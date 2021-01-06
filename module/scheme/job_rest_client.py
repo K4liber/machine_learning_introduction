@@ -1,6 +1,6 @@
 import requests
 import json
-from .data_model import XAckToken, XOutputTokenMessage
+from module.scheme.token import XAckToken, XOutputTokenMessage
 from typing import List
 str_list = List[str]
 

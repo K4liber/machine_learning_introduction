@@ -14,3 +14,4 @@ RUN apk add --no-cache python3=3.8.5-r0
 RUN python3 -m pip install --upgrade pip
 RUN apk --update add gcc libgcc musl-dev jpeg-dev zlib-dev
 #TODO CMD, Entrypoint - how it should look like?
+#TODO How to allow the FTP communation?
