@@ -17,3 +17,9 @@ def camel_to_snake(name: str) -> str:
 
 def snake_to_camel(name: str) -> str:
     return ''.join(word.title() for word in name.split('_'))
+
+
+def remove_prefix(text: str, prefix: str) -> str:
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text

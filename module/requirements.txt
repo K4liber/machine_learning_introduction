@@ -1,3 +1,3 @@
 face_recognition
 matplotlib
-#Flask...
+flask==1.1.2

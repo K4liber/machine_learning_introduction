@@ -1,5 +1,4 @@
 import threading
-from typing import List
 
 from flask import Flask, request, Response
 import json
@@ -10,11 +9,11 @@ from .token import XInputTokenMessage
 from .job_rest_client import JobRestClient
 ##############################################################################
 # import file(s) with function(s) that will perform calculation for a pin(s) #
-# Data processing function for pins could be                                 #
+# Data code function for pins could be                                 #
 # implemented in same or a different files.                                  #
 ##############################################################################
 # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
-from ..processing import Processing
+from ..code.processing import Processing
 
 # /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ #
 ##############################################################################
@@ -25,12 +24,12 @@ from .pin import PinMetaData, load_pins
 
 SYS_APP_IP = os.getenv('SYS_APP_IP', '0.0.0.0')
 SYS_APP_PORT = os.getenv('SYS_APP_PORT', 9100)
-SYS_MODULE_INSTANCE_UID = os.getenv('SYS_MODULE_INSTANCE_UID', 'alfanumeric123uid')
+SYS_MODULE_INSTANCE_UID = os.getenv('SYS_MODULE_INSTANCE_UID', 'module_uid')
 SYS_BATCH_MANAGER_TOKEN_ENDPOINT = os.getenv('SYS_BATCH_MANAGER_TOKEN_ENDPOINT', 'http://127.0.0.1:7000/token')
 SYS_BATCH_MANAGER_ACK_ENDPOINT = os.getenv('SYS_BATCH_MANAGER_ACK_ENDPOINT', 'http://127.0.0.1:7000/ack')
 SYS_MODULE_NAME = os.getenv('SYS_MODULE_NAME', 'Face recognition')
 SYS_MODULE_DESCRIPTION = os.getenv('SYS_MODULE_DESCRIPTION', 'Find and mark human faces on the given images set.')
-SYS_PIN_CONFIG_FILE_PATH = os.getenv('SYS_PIN_CONFIG_FILE_PATH', '../configs/pins.json')
+SYS_PIN_CONFIG_FILE_PATH = os.getenv('SYS_PIN_CONFIG_FILE_PATH', './module/configs/pins.json')
 
 # Loading pins metadata from a configuration file that is provided by module creator
 # during module registration. Pins metadata are extended by 'AccessCredential' field
@@ -54,12 +53,12 @@ def process_balticlsc_token():
     # mapping input message
     try:
         blsc_token = XInputTokenMessage(**request.json)
-    except TypeError:
-        return Response(json.dumps({'success': False, 'data': 'Can not parse token.'}), status=400,
+    except TypeError as te:
+        return Response(json.dumps({'success': False, 'data': str(te)}), status=400,
                         mimetype='application/json')
 
     # Create an instance of JobRestClient that will be used for sending a proper token message
-    # after data processing will finish.
+    # after data code will finish.
     rest_client = JobRestClient(
         url_token=SYS_BATCH_MANAGER_TOKEN_ENDPOINT,
         url_ack=SYS_BATCH_MANAGER_ACK_ENDPOINT,
@@ -72,7 +71,6 @@ def process_balticlsc_token():
     # Change according to a number of INPUT pins.                                                                 #
     ###############################################################################################################
     # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
-    # TODO load pins based on pins config
     input_pin_name_to_value = {input_pin.pin_name: input_pin for input_pin in INPUT_PINS}
 
     if blsc_token.PinName not in input_pin_name_to_value:
@@ -81,8 +79,9 @@ def process_balticlsc_token():
     else:
         input_pin = input_pin_name_to_value[blsc_token.PinName]
         module_processing = Processing(module_status=module_status, output_pins=OUTPUT_PINS)
+        print('running token on pin ' + blsc_token.PinName)
         pin_task = threading.Thread(target=module_processing.run,
-                                    name=input_pin.PinName + ' task for msg: ' + blsc_token.MsgUid,
+                                    name=blsc_token.PinName + ' task for msg: ' + blsc_token.MsgUid,
                                     args=(rest_client, input_pin, input_access_details))
 
     pin_task.daemon = True
@@ -96,4 +95,4 @@ def process_balticlsc_token():
 # Endpoint responsible for providing current job status.
 @app.route('/status', methods=['GET'])
 def get_status():
-    return module_status.toJson()
+    return module_status.to_json()

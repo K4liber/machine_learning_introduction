@@ -1,6 +1,6 @@
 import requests
 import json
-from module.scheme.token import XAckToken, XOutputTokenMessage
+from .token import XAckToken, XOutputTokenMessage
 from typing import List
 str_list = List[str]
 
@@ -31,4 +31,4 @@ class JobRestClient:
 
     @staticmethod
     def __send_msg_to_batch_manager(msg, url):
-        requests.post(url, data=msg.toJson(), headers={'content-type': 'application/json'})
+        requests.post(url, data=msg.to_json(), headers={'content-type': 'application/json'})

@@ -2,8 +2,8 @@ from .utils import JsonRepr
 
 
 class XInputTokenMessage(JsonRepr):
-    def __init__(self, msg_uid: str, PinName: str, Values: str, AccessType = None, SeqStack = None):
-        self.MsgUid = msg_uid                         # string
+    def __init__(self, MsgUid: str, PinName: str, Values: str, AccessType = None, SeqStack = None):
+        self.MsgUid = MsgUid                         # string
         self.PinName = PinName                       # string
         self.AccessType = AccessType                 # string
         self.Values = Values                         # dist/JSON

@@ -13,5 +13,11 @@ RUN apk add cmake
 RUN apk add --no-cache python3=3.8.5-r0
 RUN python3 -m pip install --upgrade pip
 RUN apk --update add gcc libgcc musl-dev jpeg-dev zlib-dev
-#TODO CMD, Entrypoint - how it should look like?
-#TODO How to allow the FTP communation?
+COPY ./requirements.txt requirements.txt
+RUN python3 -m pip install -r requirements.txt
+#Do not update anything above
+COPY scheme /scheme
+COPY processing.py processing.py
+# Expose the Flask port
+EXPOSE 80
+CMD [ "python3", "-u", "./scheme/api.py"]
