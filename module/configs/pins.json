@@ -12,6 +12,6 @@
  "PinType": "output",
  "AccessType": "ftp",
  "AccessCredential": {
-      "connectionstring": "ftp://ftp.drivehq.com/K4liber/baltic_test"
+      "connectionstring": "ftp://K4liber:zBFiEzcgeZjd6Vz@ftp.drivehq.com/K4liber/baltic_test/"
     }
  }]

@@ -17,6 +17,10 @@ class PinTypes:
     OUTPUT = 'output'
 
 
+class AccessTypes:
+    FTP = 'ftp'
+
+
 class PinMetaData(JsonRepr):
     def __init__(self, pin_name: str, pin_type: str, access_type: str, access_credential: Dict[str, str]):
         self.pin_name = pin_name
