@@ -22,11 +22,13 @@ class AccessTypes:
 
 
 class PinMetaData(JsonRepr):
-    def __init__(self, pin_name: str, pin_type: str, access_type: str, access_credential: Dict[str, str]):
+    def __init__(self, pin_name: str, pin_type: str, access_type: str,
+                 access_credential: Dict[str, str], values: Dict[str, str] = dict()):
         self.pin_name = pin_name
         self.pin_type = pin_type
         self.access_type = access_type
         self.access_credential = access_credential
+        self.values = values
 
     def getattr(self, name: str):
         attr_value: str = self.__getattribute__(name)
@@ -81,3 +83,37 @@ def load_pins_from_json(config: List[dict]) -> (List[PinMetaData], List[PinMetaD
             raise value_error
 
     return input_pins, output_pins
+
+
+class MissingPin(Exception):
+    """Exception raised for errors in the pins configuration.
+
+    Attributes:
+        pins -- list of pins where we look for a specific pin
+        message -- explanation of the error
+    """
+
+    def __init__(self, pins: List[PinMetaData], message="missing pin"):
+        self.pins = pins
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.pins} -> {self.message}'
+
+
+class MissingPinValue(Exception):
+    """Exception raised for errors in the pins configuration.
+
+    Attributes:
+        pin_values -- values of a pin
+        message -- explanation of the error
+    """
+
+    def __init__(self, pin_values: Dict[str, str], message="missing value"):
+        self.pin_values = pin_values
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.pin_values} -> {self.message}'

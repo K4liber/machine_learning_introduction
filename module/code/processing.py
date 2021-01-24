@@ -8,7 +8,7 @@ from matplotlib import pyplot, patches
 
 from ..access.ftp import upload_file
 from ..scheme.job_rest_client import JobRestClient
-from ..scheme.pin import PinMetaData, AccessTypes
+from ..scheme.pin import PinMetaData, AccessTypes, MissingPin, MissingPinValue
 from ..scheme.processing import ProcessingInterface
 
 
@@ -18,13 +18,24 @@ class Processing(ProcessingInterface):
         ###################################################################
         # PUT YOUR CODE HERE                                              #
         ###################################################################
-        # 1) Use pin_input and input_access_details variable to read data #
+        # 1) Use input_pin and input_access_details variable to read data #
         # 2) Preform operation on data                                    #
         # 3) Send output data to given output,                            #
-        #    use pin_output variable to get credentials to output source  #
-        # 4) [optional] You can use app_logger for debug                  #
+        #    use output_pins variable to get credentials to output source #
         ###################################################################
-        output_folder: str = '/baltic_test/output_folder'
+        output_pin_name_to_pin = {output_pin.pin_name: output_pin for output_pin in output_pins}
+        output_pin_name: str = 'Output'
+
+        if output_pin_name not in output_pin_name_to_pin:
+            raise MissingPin(output_pins, 'missing pin with name "' + output_pin_name + '"')
+
+        output_pin = output_pin_name_to_pin[output_pin_name]
+        output_data_access_details = output_pin.values
+
+        if 'dir' not in output_data_access_details:
+            raise MissingPinValue(output_data_access_details, 'missing "dir" value in pin')
+
+        output_folder = output_data_access_details['dir']
 
         if input_pin.access_type == AccessTypes.FTP:
             print(input_access_details)
@@ -97,11 +108,6 @@ class Processing(ProcessingInterface):
             print('module do not support "' + input_pin.access_type + '" access type')
 
         # Sending output token
-        output_pin_name_to_pin = {output_pin.pin_name: output_pin for output_pin in output_pins}
-        output_pin_name: str = 'Output'
-        output_data_access_details: dict = copy.deepcopy(input_access_details)
-        output_data_access_details['dir'] = output_folder
-        
         if output_pin_name in output_pin_name_to_pin:
             output_pin = output_pin_name_to_pin[output_pin_name]
             # Sending output Token
