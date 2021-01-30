@@ -9,18 +9,15 @@ from .token import XInputTokenMessage
 from .job_rest_client import JobRestClient
 ##############################################################################
 # import file(s) with function(s) that will perform calculation for a pin(s) #
-# Data code function for pins could be                                 #
+# Data content function for pins could be                                    #
 # implemented in same or a different files.                                  #
 ##############################################################################
 # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
-from ..code.processing import Processing
-
-# /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ #
-##############################################################################
+from ..content.processing import Processing
 
 # Variables that start with "SYS_" are system variables and
 # will be set by CAL execution engine during container creation.
-from .pin import PinMetaData, load_pins
+from .pin import load_pins
 
 SYS_APP_IP = os.getenv('SYS_APP_IP', '0.0.0.0')
 SYS_APP_PORT = os.getenv('SYS_APP_PORT', 9100)
@@ -29,7 +26,7 @@ SYS_BATCH_MANAGER_TOKEN_ENDPOINT = os.getenv('SYS_BATCH_MANAGER_TOKEN_ENDPOINT',
 SYS_BATCH_MANAGER_ACK_ENDPOINT = os.getenv('SYS_BATCH_MANAGER_ACK_ENDPOINT', 'http://127.0.0.1:7000/ack')
 SYS_MODULE_NAME = os.getenv('SYS_MODULE_NAME', 'Face recognition')
 SYS_MODULE_DESCRIPTION = os.getenv('SYS_MODULE_DESCRIPTION', 'Find and mark human faces on the given images set.')
-SYS_PIN_CONFIG_FILE_PATH = os.getenv('SYS_PIN_CONFIG_FILE_PATH', './module/configs/pins.json')
+SYS_PIN_CONFIG_FILE_PATH = os.getenv('SYS_PIN_CONFIG_FILE_PATH', '/app/module/configs/pins.json')
 
 # Loading pins metadata from a configuration file that is provided by module creator
 # during module registration. Pins metadata are extended by 'AccessCredential' field
@@ -58,7 +55,7 @@ def process_balticlsc_token():
                         mimetype='application/json')
 
     # Create an instance of JobRestClient that will be used for sending a proper token message
-    # after data code will finish.
+    # after data content will finish.
     rest_client = JobRestClient(
         url_token=SYS_BATCH_MANAGER_TOKEN_ENDPOINT,
         url_ack=SYS_BATCH_MANAGER_ACK_ENDPOINT,

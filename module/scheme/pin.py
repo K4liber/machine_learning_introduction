@@ -1,15 +1,8 @@
 import json
 import logging
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from .utils import JsonRepr, camel_to_snake
-
-_pin_required_attributes = [
-    'PinName',
-    'PinType',
-    'AccessType',
-    'AccessCredential',
-]
 
 
 class PinTypes:
@@ -22,13 +15,18 @@ class AccessTypes:
 
 
 class PinMetaData(JsonRepr):
-    def __init__(self, pin_name: str, pin_type: str, access_type: str,
-                 access_credential: Dict[str, str], values: Dict[str, str] = dict()):
-        self.pin_name = pin_name
-        self.pin_type = pin_type
-        self.access_type = access_type
-        self.access_credential = access_credential
-        self.values = values
+    def __init__(self, attributes: Dict[str, Any]):
+        for required_attribute in PinMetaData.get_required_attributes():
+            if required_attribute in attributes:
+                self.__setattr__(required_attribute, attributes[required_attribute])
+            else:
+                raise ValueError('required attribute "' + required_attribute + '" is missing in config')
+
+        for default_attribute, default_value in PinMetaData.get_default_attributes().items():
+            if default_attribute in attributes:
+                self.__setattr__(default_attribute, attributes[default_attribute])
+            else:
+                self.__setattr__(default_attribute, default_value)
 
     def getattr(self, name: str):
         attr_value: str = self.__getattribute__(name)
@@ -38,16 +36,33 @@ class PinMetaData(JsonRepr):
         else:
             return attr_value
 
+    @classmethod
+    def get_required_attributes(cls):
+        return {
+            'pin_name',
+            'pin_type',
+        }
+
+    @classmethod
+    def get_default_attributes(cls):
+        return {
+            'access_type': '',
+            'access_credential': None,
+            'token_multiplicity': '',
+            'data_multiplicity': '',
+            'values': None,
+        }
+
 
 def load_pin_meta_data(pin_json: dict) -> PinMetaData:
     try:
-        pin_meta_data = PinMetaData(**{camel_to_snake(key): value for key, value in pin_json.items()})
+        pin_meta_data = PinMetaData({camel_to_snake(key): value for key, value in pin_json.items()})
     except TypeError as type_error:
         errors_msg: str = 'wrong config for pin json:' + str(pin_json) + ', error: ' + str(type_error)
         raise ValueError(errors_msg) from type_error
     # Check required attributes loading
-    for required_attribute in _pin_required_attributes:
-        pin_meta_data.getattr(camel_to_snake(required_attribute))
+    for required_attribute in PinMetaData.get_required_attributes():
+        pin_meta_data.getattr(required_attribute)
 
     return pin_meta_data
 

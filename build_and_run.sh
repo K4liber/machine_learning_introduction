@@ -1,6 +1,6 @@
 #!/bin/bash
 app="face_recognition"
-docker build -t ${app} .
+docker build -t ${app} module
 docker stop ${app}
 docker rm ${app}
 docker run -d -p 56733:80 \

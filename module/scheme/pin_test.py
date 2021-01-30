@@ -1,7 +1,7 @@
 import unittest
 from typing import List
 
-from .pin import load_pins_from_json
+from .pin import load_pins_from_json, PinMetaData
 
 
 class TestLoadPinsFromJson(unittest.TestCase):
@@ -32,8 +32,6 @@ class TestLoadPinsFromJson(unittest.TestCase):
         json: List[dict] = [
             {
                 "PinName": "Input",
-                "PinType": "input",
-                "AccessType": "ftp",
             },
         ]
         try:
@@ -41,6 +39,27 @@ class TestLoadPinsFromJson(unittest.TestCase):
             self.assertTrue(False, "test case should raise an error")
         except ValueError:
             pass
+
+    def test_origin_pin_config(self):
+        json: List[dict] = [
+            {
+                'PinName': 'Input',
+                'PinType': 'input',
+                'AccessType': '',
+                'DataMultiplicity': 'multiple',
+                'TokenMultiplicity': 'multiple'
+            },
+            {
+                'PinName': 'Output',
+                'PinType': 'output',
+                'AccessType': '',
+                'DataMultiplicity': 'multiple',
+                'TokenMultiplicity': 'multiple'
+            }
+        ]
+        input_pins, output_pins = load_pins_from_json(json)
+        self.assertEqual(len(input_pins), 1)
+        self.assertEqual(len(output_pins), 1)
 
 
 if __name__ == '__main__':

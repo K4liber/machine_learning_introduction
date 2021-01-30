@@ -16,12 +16,13 @@ RUN apk --update add gcc libgcc musl-dev jpeg-dev zlib-dev
 COPY ./requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
 #Do not update anything above
-COPY __init__.py /module/__init__.py
-COPY scheme /module/scheme
-COPY access /module/access
-COPY configs /module/configs
-COPY code /module/code
-ENV FLASK_APP='/module/scheme/api.py'
+WORKDIR app
+COPY __init__.py module/__init__.py
+COPY scheme module/scheme
+COPY access module/access
+COPY configs module/configs
+COPY content module/content
+ENV FLASK_APP='/app/module/scheme/api.py'
 RUN echo $FLASK_APP
 # Expose the Flask port
 EXPOSE 80
