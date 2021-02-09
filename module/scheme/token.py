@@ -2,19 +2,23 @@ from .utils import JsonRepr
 
 
 class XInputTokenMessage(JsonRepr):
-    def __init__(self, MsgUid: str, PinName: str, Values: str, AccessType = None, SeqStack = None):
+    def __init__(self, MsgUid: str, PinName: str, Values: str, AccessType = None, TokenSeqStack = None):
         self.MsgUid = MsgUid                         # string
         self.PinName = PinName                       # string
         self.AccessType = AccessType                 # string
         self.Values = Values                         # dist/JSON
 
-        if SeqStack is None:
+        if TokenSeqStack is None:
             self.SeqStack = None                     # null if not set
         else:
             seq_stac = []
-            for seq_token in SeqStack:
+            for seq_token in TokenSeqStack:
                 seq_stac.append(XSeqToken(**seq_token))
             self.SeqStack = seq_stac                 # list of XSeqToken
+
+    def __str__(self):
+        return "TOKEN: MsgUid=%s, PinName=%s, AccessType=%s, Values=%s" % \
+               (self.MsgUid, self.PinName, self.AccessType, self.Values)
 
 
 class XOutputTokenMessage(JsonRepr):

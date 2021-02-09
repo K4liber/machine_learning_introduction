@@ -46,6 +46,7 @@ class PinMetaData(JsonRepr):
     @classmethod
     def get_default_attributes(cls):
         return {
+            'access_path': None,
             'access_type': '',
             'access_credential': None,
             'token_multiplicity': '',

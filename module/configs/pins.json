@@ -3,18 +3,26 @@
  "PinName": "Input",
  "PinType": "input",
  "AccessType": "ftp",
+ "DataMultiplicity": "single",
+ "TokenMultiplicity": "single",
  "AccessCredential": {
-      "connectionstring": "ftp://K4liber:jfcXKuL8cYeTFzS@ftp.drivehq.com/K4liber/baltic_test/"
-    }
+    "User": "balticlsc",
+    "Password": "PlaceToPutAllMyDogImages!",
+    "Host": "185.23.162.184"
+  }
  },
  {
  "PinName": "Output",
  "PinType": "output",
  "AccessType": "ftp",
+ "DataMultiplicity": "single",
+ "TokenMultiplicity": "single",
  "AccessCredential": {
-      "connectionstring": "ftp://K4liber:jfcXKuL8cYeTFzS@ftp.drivehq.com/K4liber/baltic_test/"
-    },
-   "Values": {
-     "dir": "/baltic_test/output_folder"
+    "User": "balticlsc",
+    "Password": "PlaceToPutAllMyDogImages!",
+    "Host": "185.23.162.184"
+  },
+   "AccessPath": {
+     "ResourcePath": "/files/recogniser/out"
    }
- }]
+}]

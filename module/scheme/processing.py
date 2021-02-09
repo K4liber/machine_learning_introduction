@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import List
 
 from .job_rest_client import JobRestClient
@@ -10,9 +11,9 @@ class ProcessingInterface:
         self._module_status = module_status
         self._output_pins = output_pins
 
-    def run(self, rest_client: JobRestClient, input_pin: PinMetaData, input_access_details: dict):
+    def run(self, rest_client: JobRestClient, input_pin: PinMetaData, input_access_details: dict,logger: Logger):
         self._pre_process()
-        self.process(rest_client, input_pin, input_access_details, self._output_pins)
+        self.process(rest_client, input_pin, input_access_details, self._output_pins, logger)
         self._post_process()
 
     def _pre_process(self):
@@ -21,7 +22,7 @@ class ProcessingInterface:
     def _post_process(self):
         self._module_status.Status = ComputationStatus.Idle
 
-    def process(self, rest_client: JobRestClient,
-                input_pin: PinMetaData, input_access_details: dict, output_pins: List[PinMetaData]):
+    def process(qself, rest_client: JobRestClient,
+                input_pin: PinMetaData, input_access_details: dict, output_pins: List[PinMetaData], logger: Logger):
         """Process input token and send the output (data + tokens)."""
         pass

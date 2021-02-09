@@ -26,4 +26,4 @@ ENV FLASK_APP='/app/module/scheme/api.py'
 RUN echo $FLASK_APP
 # Expose the Flask port
 EXPOSE 80
-CMD [ "flask", "run", "--host=0.0.0.0", "--port=80"]
+ENTRYPOINT [ "flask", "run", "--host=0.0.0.0", "--port=80"]
