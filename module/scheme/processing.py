@@ -1,6 +1,7 @@
 from typing import List
 
 from .job_rest_client import JobRestClient
+from .logger import logger
 from .pin import PinMetaData
 from .status import XJobStatus, ComputationStatus
 
@@ -13,7 +14,18 @@ class ProcessingInterface:
     def run(self, rest_client: JobRestClient, msg_uid: str, input_pin: PinMetaData,
             input_access_details: dict):
         self._pre_process()
-        self.process(rest_client, msg_uid, input_pin, input_access_details, self._output_pins)
+
+        try:
+            self.process(rest_client, msg_uid, input_pin, input_access_details, self._output_pins)
+        except BaseException as exception:
+            error_msg = 'received  error while processing data: ' + str(exception)
+            logger.error(error_msg)
+            rest_client.send_ack_token(
+                msg_uid=msg_uid,
+                is_failed=True,
+                is_final=True,
+                note=error_msg,
+            )
 
         if self._module_status != ComputationStatus.Failed:
             self._post_process()

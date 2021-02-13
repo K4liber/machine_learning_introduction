@@ -11,7 +11,7 @@ def chdir(dir_name: str, ftp: FTP) -> None:
     try:
         ftp.mkd(dir_name)
     except error_perm as ep:
-        if 'Directory already exists' not in str(ep) and 'Create directory operation failed' not in str(ep):
+        if 'exists' not in str(ep) and 'Create directory operation failed' not in str(ep):
             raise error_perm
 
     ftp.cwd(dir_name)

@@ -49,7 +49,7 @@ class Processing(ProcessingInterface):
         # START # Establish input credentials and folder # START #
         if input_access_credential is None:
             logger.info('missing "access_credential" in input pin, trying to use input token values instead')
-            input_access_credential = input_token_values
+            input_access_credential = input_token_values.access_credential
         else:
             input_access_credential = {camel_to_snake(key): value for key, value in input_access_credential.items()}
             logger.info('using input access credential from pin: ' + str(input_access_credential))
@@ -112,23 +112,73 @@ class Processing(ProcessingInterface):
         # START # set output token values # START #
         output_token_values = {
             'AccessCredential': {snake_to_camel(key): value for key, value in output_access_credential.items()},
-            'AccessPath': {
-                'ResourcePath': output_folder
-            },
+            'ResourcePath': output_folder
         }
         # START # initialize connection for the input and output pins # START #
         logger.info('connecting to input ftp server: ' + input_ftp_credential.host)
-        input_ftp = FTP()
-        input_ftp.connect(input_ftp_credential.host, input_ftp_credential.port)
-        input_ftp.sendcmd('USER ' + input_ftp_credential.user)
-        input_ftp.sendcmd('PASS ' + input_ftp_credential.password)
+        retries = 0
+
+        while retries < 10:
+            retries += 1
+
+            try:
+                input_ftp = FTP()
+                input_ftp.connect(input_ftp_credential.host, input_ftp_credential.port)
+                input_ftp.sendcmd('USER ' + input_ftp_credential.user)
+                input_ftp.sendcmd('PASS ' + input_ftp_credential.password)
+                break
+            except BaseException as exception:
+                error_msg = 'connecting to FTP ' + str(retries) + ' retries, exception' + str(exception)
+                logger.error(error_msg)
+                rest_client.send_ack_token(
+                    msg_uid=error_msg,
+                    is_final=False,
+                    is_failed=False,
+                    note=error_msg
+                )
+
+        if retries == 10:
+            error_msg = 'connecting to FTP max retries exceeded'
+            logger.error(error_msg)
+            rest_client.send_ack_token(
+                msg_uid=error_msg,
+                is_final=True,
+                is_failed=True,
+                note=error_msg
+            )
 
         if output_ftp_credential != input_ftp_credential:
             logger.info('connecting to output ftp server: ' + output_ftp_credential.host)
-            output_ftp = FTP()
-            output_ftp.connect(output_ftp_credential.host, output_ftp_credential.port)
-            output_ftp.sendcmd('USER ' + output_ftp_credential.user)
-            output_ftp.sendcmd('PASS ' + output_ftp_credential.password)
+            retries = 0
+
+            while retries < 10:
+                retries += 1
+
+                try:
+                    output_ftp = FTP()
+                    output_ftp.connect(output_ftp_credential.host, output_ftp_credential.port)
+                    output_ftp.sendcmd('USER ' + output_ftp_credential.user)
+                    output_ftp.sendcmd('PASS ' + output_ftp_credential.password)
+                    break
+                except BaseException as exception:
+                    error_msg = 'connecting to FTP ' + str(retries) + ' retries, exception' + str(exception)
+                    logger.error(error_msg)
+                    rest_client.send_ack_token(
+                        msg_uid=error_msg,
+                        is_final=False,
+                        is_failed=False,
+                        note=error_msg
+                    )
+
+            if retries == 10:
+                error_msg = 'connecting to FTP max retries exceeded'
+                logger.error(error_msg)
+                rest_client.send_ack_token(
+                    msg_uid=error_msg,
+                    is_final=True,
+                    is_failed=True,
+                    note=error_msg
+                )
         else:
             logger.info('using the same connection as output ftp')
             output_ftp = input_ftp
@@ -145,6 +195,7 @@ class Processing(ProcessingInterface):
         for filename in filenames:
             if not filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
                 logger.warning('wrong format of the file "' + filename + '", omitting')
+                continue
 
             logger.info('downloading file "' + filename + '"')
             filepath = 'tmp/' + filename
