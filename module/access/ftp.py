@@ -15,8 +15,3 @@ def chdir(dir_name: str, ftp: FTP) -> None:
             raise error_perm
 
     ftp.cwd(dir_name)
-
-
-class CorrectFTP(FTP):
-    def makepasv(self):
-        return "185.23.162.184", 21

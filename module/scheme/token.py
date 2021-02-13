@@ -1,33 +1,38 @@
+from typing import List, Union
+
 from .utils import JsonRepr
 
+UNKNOWN_MSG_UID = "unknown"
 
-class XInputTokenMessage(JsonRepr):
-    def __init__(self, MsgUid: str, PinName: str, Values: str, AccessType = None, TokenSeqStack = None):
-        self.MsgUid = MsgUid                         # string
-        self.PinName = PinName                       # string
-        self.AccessType = AccessType                 # string
-        self.Values = Values                         # dist/JSON
+
+class InputToken(JsonRepr):
+    def __init__(self, MsgUid: str, PinName: str, Values: str,
+                 AccessType: Union[dict, None] = None, TokenSeqStack: Union[List[dict], None] = None):
+        self.MsgUid = MsgUid
+        self.PinName = PinName
+        self.AccessType = AccessType
+        self.Values = Values
 
         if TokenSeqStack is None:
-            self.SeqStack = None                     # null if not set
+            self.SeqStack = None
         else:
             seq_stac = []
             for seq_token in TokenSeqStack:
                 seq_stac.append(XSeqToken(**seq_token))
-            self.SeqStack = seq_stac                 # list of XSeqToken
+            self.SeqStack = seq_stac
 
     def __str__(self):
-        return "TOKEN: MsgUid=%s, PinName=%s, AccessType=%s, Values=%s" % \
-               (self.MsgUid, self.PinName, self.AccessType, self.Values)
+        return "TOKEN: MsgUid=%s, PinName=%s, AccessType=%s, Values=%s, TokenSeqStack=%s" % \
+               (self.MsgUid, self.PinName, self.AccessType, self.Values, self.SeqStack)
 
 
-class XOutputTokenMessage(JsonRepr):
-    def __init__(self, PinName, SenderUid, Values, BaseMsgUid: str, IsFinal):
-        self.PinName = PinName            # string
-        self.SenderUid = SenderUid        # string
-        self.Values = Values              # dist/JSON
-        self.BaseMsgUid = BaseMsgUid      # list of strings
-        self.IsFinal = IsFinal            # bool
+class OutputToken(JsonRepr):
+    def __init__(self, PinName: str, SenderUid: str, Values: str, MsgUid: str, IsFinal):
+        self.PinName = PinName
+        self.SenderUid = SenderUid
+        self.Values = Values
+        self.MsgUid = MsgUid
+        self.IsFinal = IsFinal
 
 
 class XSeqToken(JsonRepr):
@@ -37,7 +42,10 @@ class XSeqToken(JsonRepr):
         self.IsFinal = IsFinal     # bool
 
 
-class XAckToken(JsonRepr):
-    def __init__(self, SenderUid, MsgUids):
-        self.SenderUid = SenderUid       # string
-        self.MsgUids = MsgUids           # list of string
+class AckToken(JsonRepr):
+    def __init__(self, SenderUid: str, MsgUid: str, Note: str, IsFinal: bool = False, IsFailed: bool = False):
+        self.SenderUid = SenderUid
+        self.MsgUid = MsgUid
+        self.Note = Note
+        self.IsFinal = IsFinal
+        self.IsFailed = IsFailed

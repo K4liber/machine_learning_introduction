@@ -8,7 +8,8 @@
  "AccessCredential": {
     "User": "balticlsc",
     "Password": "PlaceToPutAllMyDogImages!",
-    "Host": "185.23.162.184"
+    "Host": "185.23.162.184",
+    "Port": 21
   }
  },
  {
@@ -16,13 +17,5 @@
  "PinType": "output",
  "AccessType": "ftp",
  "DataMultiplicity": "single",
- "TokenMultiplicity": "single",
- "AccessCredential": {
-    "User": "balticlsc",
-    "Password": "PlaceToPutAllMyDogImages!",
-    "Host": "185.23.162.184"
-  },
-   "AccessPath": {
-     "ResourcePath": "/files/recogniser/out"
-   }
+ "TokenMultiplicity": "single"
 }]

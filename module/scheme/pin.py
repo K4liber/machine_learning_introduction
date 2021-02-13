@@ -2,6 +2,7 @@ import json
 import logging
 from typing import List, Dict, Any
 
+from .job_rest_client import JobRestClient
 from .utils import JsonRepr, camel_to_snake
 
 
@@ -69,13 +70,15 @@ def load_pin_meta_data(pin_json: dict) -> PinMetaData:
 
 
 # Load and return input and output pins meta data from the given config file path
-def load_pins(config_file_path: str) -> (List[PinMetaData], List[PinMetaData]):
+def load_pins(config_file_path: str, rest_client: JobRestClient) -> (List[PinMetaData], List[PinMetaData]):
     with open(config_file_path) as json_file:
         try:
             config = json.load(json_file)
             return load_pins_from_json(config)
         except ValueError as value_error:
-            logging.error('error while loading config from ' + config_file_path + ': ' + str(value_error))
+            error_msg = 'error while loading config from ' + config_file_path + ': ' + str(value_error)
+            rest_client.send_ack_token(is_final=True, is_failed=True, note=error_msg)
+            logging.error(error_msg)
 
 
 def load_pins_from_json(config: List[dict]) -> (List[PinMetaData], List[PinMetaData]):
@@ -88,10 +91,10 @@ def load_pins_from_json(config: List[dict]) -> (List[PinMetaData], List[PinMetaD
 
             if pin.pin_type == PinTypes.INPUT:
                 input_pins.append(pin)
-                print('loaded pin: ' + pin.to_json())
+                logging.info('loaded pin: ' + pin.to_json())
             elif pin.pin_type == PinTypes.OUTPUT:
                 output_pins.append(pin)
-                print('loaded pin: ' + pin.to_json())
+                logging.info('loaded pin: ' + pin.to_json())
             else:
                 print('unknown type for pin:"' + pin.to_json())
         except ValueError as value_error:

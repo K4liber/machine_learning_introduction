@@ -5,7 +5,7 @@ import json
 import os
 
 from .status import XJobStatus, ComputationStatus
-from .token import XInputTokenMessage
+from .token import InputToken
 from .job_rest_client import JobRestClient
 ##############################################################################
 # import file(s) with function(s) that will perform calculation for a pin(s) #
@@ -37,58 +37,63 @@ module_status = XJobStatus(ComputationStatus.Idle, -1)
 logger.info('working on path=' + os.getcwd())
 files_in_cwd = {f for f in os.listdir('.')}
 logger.info('files in cwd=' + str(files_in_cwd))
+# Load rest client
+rest_client = JobRestClient(
+    url_token=SYS_BATCH_MANAGER_TOKEN_ENDPOINT,
+    url_ack=SYS_BATCH_MANAGER_ACK_ENDPOINT,
+    sender_uid=SYS_MODULE_INSTANCE_UID)
 ##################################################################
 # Mapping pins meta data to instance of the pins class.          #
 ##################################################################
 # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
-INPUT_PINS, OUTPUT_PINS = load_pins(SYS_PIN_CONFIG_FILE_PATH)
+INPUT_PINS, OUTPUT_PINS = load_pins(SYS_PIN_CONFIG_FILE_PATH, rest_client)
 # /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ #
 ##################################################################
 input_pin_name_to_value = {input_pin.pin_name: input_pin for input_pin in INPUT_PINS}
-logger.info('Input pins from config:' + str(input_pin_name_to_value.keys()))
+logger.info('input pins from config:' + str(input_pin_name_to_value))
 
 app = Flask(__name__)
 
 
 @app.route('/token', methods=['POST'])
 def process_balticlsc_token():
-    # mapping input message
-    try:
-        logger.info(request.json)
-        blsc_token = XInputTokenMessage(**request.json)
-    except TypeError as te:
-        logger.error(te)
-        return Response(json.dumps({'success': False, 'data': str(te)}), status=400,
-                        mimetype='application/json')
+    logger.info('received request: ' + str(request.json))
 
+    try:
+        input_token = InputToken(**request.json)
+    except TypeError as type_error:
+        error_msg = 'error while loading input token: ' + str(type_error)
+        logger.error(error_msg)
+        rest_client.send_ack_token(
+            msg_uid='unknown',
+            is_final=True,
+            is_failed=True,
+            note=error_msg,
+        )
+        return Response(json.dumps({'success': False, 'data': error_msg}), status=400,
+                        mimetype='application/json')
     # Create an instance of JobRestClient that will be used for sending a proper token message
     # after data content will finish.
-    logger.info(blsc_token)
-    rest_client = JobRestClient(
-        url_token=SYS_BATCH_MANAGER_TOKEN_ENDPOINT,
-        url_ack=SYS_BATCH_MANAGER_ACK_ENDPOINT,
-        sender_uid=SYS_MODULE_INSTANCE_UID,
-        base_msg_uids=[blsc_token.MsgUid])
-    input_token_values = json.loads(blsc_token.Values)
-
+    logger.info('input token: ' + str(input_token))
+    input_token_values = json.loads(input_token.Values)
     ###############################################################################################################
     # Switch-case for preforming different calculation for different input pins.                                  #
     # Change according to a number of INPUT pins.                                                                 #
     ###############################################################################################################
     # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
 
-    if blsc_token.PinName not in input_pin_name_to_value:
-        logger.info('missing pin with name: ' + blsc_token.PinName)
+    if input_token.PinName not in input_pin_name_to_value:
+        logger.info('missing pin with name: ' + input_token.PinName)
         return Response(json.dumps({'success': False,
-                                    'data': 'missing pin with name ' + blsc_token.PinName + ' in module config'}),
+                                    'data': 'missing pin with name ' + input_token.PinName + ' in module config'}),
                         status=400, mimetype='application/json')
     else:
-        input_pin = input_pin_name_to_value[blsc_token.PinName]
+        input_pin = input_pin_name_to_value[input_token.PinName]
         module_processing = Processing(module_status=module_status, output_pins=OUTPUT_PINS)
-        logger.info('running token on pin with name=' + blsc_token.PinName)
+        logger.info('running token on pin with name=' + input_token.PinName)
         pin_task = threading.Thread(target=module_processing.run,
-                                    name=blsc_token.PinName + ' task for msg: ' + blsc_token.MsgUid,
-                                    args=(rest_client, input_pin, input_token_values, logger))
+                                    name=input_token.PinName + ' task for msg: ' + input_token.MsgUid,
+                                    args=(rest_client, input_token.MsgUid, input_pin, input_token_values))
 
     pin_task.daemon = True
     pin_task.start()

@@ -1,5 +1,7 @@
 import json
 import re
+from hashlib import md5
+from time import localtime
 
 
 class JsonRepr:
@@ -23,3 +25,9 @@ def remove_prefix(text: str, prefix: str) -> str:
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
+
+
+def get_random_output_folder(input_folder: str) -> str:
+    from pathlib import Path
+    path = Path(input_folder)
+    return str(path.parent) + '/out_' + md5(str(localtime()).encode('utf-8')).hexdigest()[:10]
