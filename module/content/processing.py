@@ -6,31 +6,17 @@ from matplotlib import pyplot, patches
 from PIL import Image
 import numpy as np
 
-from ..access.ftp import upload_file
+from ..access.ftp import upload_file, get_connection
 from ..configs.credential.ftp import FTPCredential
 from ..scheme.logger import logger
 from ..scheme.job_rest_client import JobRestClient
 from ..scheme.pin import PinMetaData, MissingPin
 from ..scheme.processing import ProcessingInterface
-from ..scheme.status import ComputationStatus
 from ..scheme.utils import camel_to_snake, snake_to_camel, get_random_output_folder
-
-from ftplib import FTP
-# Hacking the FTP library
-_old_makepasv = FTP.makepasv
-
-
-def _new_makepasv(self):
-    host, port = _old_makepasv(self)
-    host = self.sock.getpeername()[0]
-    return host, port
-
-
-FTP.makepasv = _new_makepasv
-# Hacking the FTP library
 
 
 class Processing(ProcessingInterface):
+    # TODO refactor this function, make unit tests
     def process(self, rest_client: JobRestClient, msg_uid: str,
                 input_pin: PinMetaData, input_token_values: dict, output_pins: List[PinMetaData]):
         ###################################################################
@@ -45,7 +31,6 @@ class Processing(ProcessingInterface):
         logger.info('input token values="' + str(input_token_values) + '"')
         input_access_credential = input_pin.access_credential
         input_token_values = {camel_to_snake(key): value for key, value in input_token_values.items()}
-        # TODO refactor this function, make unit tests
         # START # Establish input credentials and folder # START #
         if input_access_credential is None:
             logger.info('missing "access_credential" in input pin, trying to use input token values instead')
@@ -71,8 +56,6 @@ class Processing(ProcessingInterface):
         if output_pin_name not in output_pin_name_to_pin:
             error_msg = 'missing pin with name="' + output_pin_name + '" in output pins config'
             logger.error(error_msg)
-            self._module_status = ComputationStatus.Failed
-            rest_client.send_ack_token(is_final=True, is_failed=True, note=error_msg)
             raise MissingPin(output_pins, error_msg)
 
         output_pin = output_pin_name_to_pin[output_pin_name]
@@ -116,69 +99,11 @@ class Processing(ProcessingInterface):
         }
         # START # initialize connection for the input and output pins # START #
         logger.info('connecting to input ftp server: ' + input_ftp_credential.host)
-        retries = 0
-
-        while retries < 10:
-            retries += 1
-
-            try:
-                input_ftp = FTP()
-                input_ftp.connect(input_ftp_credential.host, input_ftp_credential.port)
-                input_ftp.sendcmd('USER ' + input_ftp_credential.user)
-                input_ftp.sendcmd('PASS ' + input_ftp_credential.password)
-                break
-            except BaseException as exception:
-                error_msg = 'connecting to FTP ' + str(retries) + ' retries, exception' + str(exception)
-                logger.error(error_msg)
-                rest_client.send_ack_token(
-                    msg_uid=error_msg,
-                    is_final=False,
-                    is_failed=False,
-                    note=error_msg
-                )
-
-        if retries == 10:
-            error_msg = 'connecting to FTP max retries exceeded'
-            logger.error(error_msg)
-            rest_client.send_ack_token(
-                msg_uid=error_msg,
-                is_final=True,
-                is_failed=True,
-                note=error_msg
-            )
+        input_ftp = get_connection(**input_ftp_credential)
 
         if output_ftp_credential != input_ftp_credential:
             logger.info('connecting to output ftp server: ' + output_ftp_credential.host)
-            retries = 0
-
-            while retries < 10:
-                retries += 1
-
-                try:
-                    output_ftp = FTP()
-                    output_ftp.connect(output_ftp_credential.host, output_ftp_credential.port)
-                    output_ftp.sendcmd('USER ' + output_ftp_credential.user)
-                    output_ftp.sendcmd('PASS ' + output_ftp_credential.password)
-                    break
-                except BaseException as exception:
-                    error_msg = 'connecting to FTP ' + str(retries) + ' retries, exception' + str(exception)
-                    logger.error(error_msg)
-                    rest_client.send_ack_token(
-                        msg_uid=error_msg,
-                        is_final=False,
-                        is_failed=False,
-                        note=error_msg
-                    )
-
-            if retries == 10:
-                error_msg = 'connecting to FTP max retries exceeded'
-                logger.error(error_msg)
-                rest_client.send_ack_token(
-                    msg_uid=error_msg,
-                    is_final=True,
-                    is_failed=True,
-                    note=error_msg
-                )
+            output_ftp = get_connection(**output_ftp_credential)
         else:
             logger.info('using the same connection as output ftp')
             output_ftp = input_ftp
@@ -199,7 +124,6 @@ class Processing(ProcessingInterface):
 
             logger.info('downloading file "' + filename + '"')
             filepath = 'tmp/' + filename
-            processed_filepath = 'tmp_processed/' + filename
             # Save the image locally
             with open(filepath, 'wb') as file:
                 input_ftp.retrbinary("RETR " + filename, file.write)
@@ -230,7 +154,6 @@ class Processing(ProcessingInterface):
                                          edgecolor='r', facecolor="none")
                 ax.add_patch(rect)
 
-            #fig = pyplot.gcf()
             pyplot.savefig(fname=filepath, dpi=dpi, bbox_inches='tight')
             pyplot.close()
             # Send file to ftp

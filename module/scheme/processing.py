@@ -3,12 +3,11 @@ from typing import List
 from .job_rest_client import JobRestClient
 from .logger import logger
 from .pin import PinMetaData
-from .status import XJobStatus, ComputationStatus
+from .status import ComputationStatus
 
 
 class ProcessingInterface:
-    def __init__(self, module_status: XJobStatus, output_pins: List[PinMetaData]):
-        self._module_status = module_status
+    def __init__(self, output_pins: List[PinMetaData]):
         self._output_pins = output_pins
 
     def run(self, rest_client: JobRestClient, msg_uid: str, input_pin: PinMetaData,
@@ -27,7 +26,7 @@ class ProcessingInterface:
                 note=error_msg,
             )
 
-        if self._module_status != ComputationStatus.Failed:
+        if rest_client.get_computation_stats() != ComputationStatus.Failed:
             self._post_process()
 
     def _pre_process(self):

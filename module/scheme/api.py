@@ -4,7 +4,6 @@ from flask import Flask, request, Response
 import json
 import os
 
-from .status import XJobStatus, ComputationStatus
 from .token import InputToken
 from .job_rest_client import JobRestClient
 ##############################################################################
@@ -33,7 +32,6 @@ SYS_PIN_CONFIG_FILE_PATH = os.getenv('SYS_PIN_CONFIG_FILE_PATH', '/app/module/co
 # during module registration. Pins metadata are extended by 'AccessCredential' field
 # that contains credentials to pin input source.
 # Variable for storing status value.
-module_status = XJobStatus(ComputationStatus.Idle, -1)
 logger.info('working on path=' + os.getcwd())
 files_in_cwd = {f for f in os.listdir('.')}
 logger.info('files in cwd=' + str(files_in_cwd))
@@ -42,7 +40,8 @@ rest_client = JobRestClient(
     url_token=SYS_BATCH_MANAGER_TOKEN_ENDPOINT,
     url_ack=SYS_BATCH_MANAGER_ACK_ENDPOINT,
     sender_uid=SYS_MODULE_INSTANCE_UID)
-##################################################################
+
+#################################################################
 # Mapping pins meta data to instance of the pins class.          #
 ##################################################################
 # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ #
@@ -51,7 +50,6 @@ INPUT_PINS, OUTPUT_PINS = load_pins(SYS_PIN_CONFIG_FILE_PATH, rest_client)
 ##################################################################
 input_pin_name_to_value = {input_pin.pin_name: input_pin for input_pin in INPUT_PINS}
 logger.info('input pins from config:' + str(input_pin_name_to_value))
-
 app = Flask(__name__)
 
 
@@ -89,7 +87,7 @@ def process_balticlsc_token():
                         status=400, mimetype='application/json')
     else:
         input_pin = input_pin_name_to_value[input_token.PinName]
-        module_processing = Processing(module_status=module_status, output_pins=OUTPUT_PINS)
+        module_processing = Processing(output_pins=OUTPUT_PINS)
         logger.info('running token on pin with name=' + input_token.PinName)
         pin_task = threading.Thread(target=module_processing.run,
                                     name=input_token.PinName + ' task for msg: ' + input_token.MsgUid,
@@ -106,4 +104,4 @@ def process_balticlsc_token():
 # Endpoint responsible for providing current job status.
 @app.route('/status', methods=['GET'])
 def get_status():
-    return module_status.to_json()
+    return rest_client.get_status().to_json()
