@@ -5,14 +5,18 @@ import face_recognition
 from matplotlib import pyplot, patches
 from PIL import Image
 import numpy as np
-
-from ..access.ftp import upload_file, get_connection
-from ..configs.credential.ftp import FTPCredential
-from ..scheme.logger import logger
-from ..scheme.job_rest_client import JobRestClient
-from ..scheme.pin import PinMetaData, MissingPin
-from ..scheme.processing import ProcessingInterface
-from ..scheme.utils import camel_to_snake, snake_to_camel, get_random_output_folder
+# TODO create python package from all of the import below
+from balticlsc.access.ftp import upload_file, get_connection
+from balticlsc.configs.credential.ftp import FTPCredential
+from balticlsc.scheme.api import (
+    set_processing,
+    app
+)
+from balticlsc.scheme.logger import logger
+from balticlsc.scheme.job_rest_client import JobRestClient
+from balticlsc.scheme.pin import PinMetaData, MissingPin
+from balticlsc.scheme.processing import ProcessingInterface
+from balticlsc.scheme.utils import camel_to_snake, snake_to_camel, get_random_output_folder
 
 
 class Processing(ProcessingInterface):
@@ -99,11 +103,11 @@ class Processing(ProcessingInterface):
         }
         # START # initialize connection for the input and output pins # START #
         logger.info('connecting to input ftp server: ' + input_ftp_credential.host)
-        input_ftp = get_connection(**input_ftp_credential)
+        input_ftp = get_connection(input_ftp_credential)
 
         if output_ftp_credential != input_ftp_credential:
             logger.info('connecting to output ftp server: ' + output_ftp_credential.host)
-            output_ftp = get_connection(**output_ftp_credential)
+            output_ftp = get_connection(output_ftp_credential)
         else:
             logger.info('using the same connection as output ftp')
             output_ftp = input_ftp
@@ -182,3 +186,6 @@ class Processing(ProcessingInterface):
             values=output_token_values,
             output_pin_name=output_pin.pin_name)
         # STOP # send final tokens # STOP #
+
+
+set_processing(Processing)
