@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: python:3-alpine
+    runs-on: python:3.9-alpine
 
     steps:
     - uses: actions/checkout@v2
