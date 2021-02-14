@@ -1,5 +1,5 @@
 import unittest
-from .token import InputToken
+from ..scheme.token import InputToken
 
 
 class TestLoadInputToken(unittest.TestCase):

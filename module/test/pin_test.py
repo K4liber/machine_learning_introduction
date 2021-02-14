@@ -1,7 +1,7 @@
 import unittest
 from typing import List
 
-from .pin import load_pins_from_json, PinMetaData
+from ..scheme.pin import load_pins_from_json
 
 
 class TestLoadPinsFromJson(unittest.TestCase):
